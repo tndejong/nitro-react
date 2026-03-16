@@ -127,7 +127,9 @@ const useChatWidgetState = () =>
                     break;
                 case RoomObjectType.RENTABLE_BOT:
                 case RoomObjectType.BOT:
-                    styleId = SystemChatStyleEnum.BOT;
+                    imageUrl = getUserImage(figure);
+                    // Force regular bubble style so bots show their own head icon.
+                    styleId = 0;
                     break;
             }
 

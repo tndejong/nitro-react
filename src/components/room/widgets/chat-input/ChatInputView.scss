@@ -82,3 +82,16 @@
         }
     }
 }
+
+.nitro-ai-manager-widget {
+    position: absolute;
+    right: 16px;
+    bottom: 72px;
+    width: 360px;
+    z-index: 120;
+
+    .nitro-card-content {
+        max-height: 70vh;
+        overflow-y: auto;
+    }
+}

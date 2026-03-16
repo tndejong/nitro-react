@@ -135,6 +135,9 @@ export const ModToolsView: FC<{}> = props =>
                         <Button gap={ 1 } onClick={ () => setIsTicketsVisible(prevValue => !prevValue) } className="position-relative">
                             <Base className="icon icon-tickets position-absolute start-1"/> Report Tool
                         </Button>
+                        <Button gap={ 1 } onClick={ () => CreateLinkEvent('ai-tools/toggle') } className="position-relative">
+                            <Base className="icon icon-cog position-absolute start-1"/> AI Agent Tool
+                        </Button>
                     </NitroCardContentView>
                 </NitroCardView> }
             { (openRooms.length > 0) && openRooms.map(roomId => <ModToolsRoomView key={ roomId } roomId={ roomId } onCloseClick={ () => CreateLinkEvent(`mod-tools/close-room-info/${ roomId }`) } />) }
