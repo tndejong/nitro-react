@@ -18,6 +18,7 @@ export const ChatInputView: FC<{}> = props =>
     const chatModeIdShout = useMemo(() => LocalizeText('widgets.chatinput.mode.shout'), []);
     const chatModeIdSpeak = useMemo(() => LocalizeText('widgets.chatinput.mode.speak'), []);
     const maxChatLength = useMemo(() => GetConfiguration<number>('chat.input.maxlength', 100), []);
+    const maxInputLength = useMemo(() => 512, []);
 
     const anotherInputHasFocus = useCallback(() =>
     {
@@ -88,7 +89,7 @@ export const ChatInputView: FC<{}> = props =>
         setIsTyping(false);
         setIsIdle(false);
 
-        if(text.length <= maxChatLength)
+        if(text.startsWith(':') || text.length <= maxChatLength)
         {
             if(/%CC%/g.test(encodeURIComponent(text)))
             {
@@ -238,7 +239,7 @@ export const ChatInputView: FC<{}> = props =>
             <div className="nitro-chat-input-container">
                 <div className="input-sizer align-items-center">
                     { !floodBlocked &&
-                    <input ref={ inputRef } type="text" className="chat-input" placeholder={ LocalizeText('widgets.chatinput.default') } value={ chatValue } maxLength={ maxChatLength } onChange={ event => updateChatInput(event.target.value) } onMouseDown={ event => setInputFocus() } /> }
+                    <input ref={ inputRef } type="text" className="chat-input" placeholder={ LocalizeText('widgets.chatinput.default') } value={ chatValue } maxLength={ maxInputLength } onChange={ event => updateChatInput(event.target.value) } onMouseDown={ event => setInputFocus() } /> }
                     { floodBlocked &&
                     <Text variant="danger">{ LocalizeText('chat.input.alert.flood', [ 'time' ], [ floodBlockedSeconds.toString() ]) } </Text> }
                 </div>
