@@ -10,7 +10,7 @@ export interface NitroCardViewProps extends DraggableWindowProps, ColumnProps
 
 export const NitroCardView: FC<NitroCardViewProps> = props =>
 {
-    const { theme = 'primary', uniqueKey = null, handleSelector = '.drag-handler', windowPosition = DraggableWindowPosition.CENTER, disableDrag = false, overflow = 'hidden', position = 'relative', gap = 0, classNames = [], ...rest } = props;
+    const { theme = 'primary', uniqueKey = null, handleSelector = '.drag-handler', windowPosition = DraggableWindowPosition.CENTER, disableDrag = false, overflow = 'hidden', position = 'relative', gap = 0, classNames = [], offsetLeft = 0, offsetTop = 0, ...rest } = props;
     const elementRef = useRef<HTMLDivElement>();
 
     const getClassNames = useMemo(() =>
@@ -56,7 +56,7 @@ export const NitroCardView: FC<NitroCardViewProps> = props =>
 
     return (
         <NitroCardContextProvider value={ { theme } }>
-            <DraggableWindow uniqueKey={ uniqueKey } handleSelector={ handleSelector } windowPosition={ windowPosition } disableDrag={ disableDrag }>
+            <DraggableWindow uniqueKey={ uniqueKey } handleSelector={ handleSelector } windowPosition={ windowPosition } disableDrag={ disableDrag } offsetLeft={ offsetLeft } offsetTop={ offsetTop }>
                 <Column innerRef={ elementRef } overflow={ overflow } position={ position } gap={ gap } classNames={ getClassNames } { ...rest } />
             </DraggableWindow>
         </NitroCardContextProvider>

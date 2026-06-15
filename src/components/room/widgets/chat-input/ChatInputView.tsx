@@ -12,6 +12,8 @@ export const ChatInputView: FC<{}> = props =>
     const [ isAiPanelVisible, setIsAiPanelVisible ] = useState<boolean>(false);
     const [ aiActiveTab, setAiActiveTab ] = useState<string>('agents');
     const [ aiApiKey, setAiApiKey ] = useState<string>('');
+    const [ aiElevenlabsKey, setAiElevenlabsKey ] = useState<string>('');
+    const [ aiElevenlabsVoiceId, setAiElevenlabsVoiceId ] = useState<string>('EXAVITQu4vr4xnSDxMaL');
     const [ aiBotName, setAiBotName ] = useState<string>('Aria');
     const [ aiFigureType, setAiFigureType ] = useState<string>('agent');
     const [ aiSpawnX, setAiSpawnX ] = useState<string>('');
@@ -156,6 +158,23 @@ export const ChatInputView: FC<{}> = props =>
 
         sendRawCommand(`:set_ai_key ${ key } anthropic`);
     }, [ aiApiKey, sendRawCommand ]);
+
+    const submitSetElevenlabsKey = useCallback(() =>
+    {
+        const key = aiElevenlabsKey.trim();
+
+        if(!key.length) return;
+
+        localStorage.setItem('elevenlabs_api_key', key);
+        sendRawCommand(`:set_ai_key ${ key } elevenlabs`);
+    }, [ aiElevenlabsKey, sendRawCommand ]);
+
+    const submitSetElevenlabsVoiceId = useCallback(() =>
+    {
+        const voiceId = aiElevenlabsVoiceId.trim();
+        if(!voiceId.length) return;
+        localStorage.setItem('elevenlabs_voice_id', voiceId);
+    }, [ aiElevenlabsVoiceId ]);
 
     const submitSetupAgent = useCallback(() =>
     {
@@ -361,6 +380,8 @@ export const ChatInputView: FC<{}> = props =>
     {
         if(!isAiPanelVisible) return;
 
+        setAiElevenlabsKey(localStorage.getItem('elevenlabs_api_key') || '');
+        setAiElevenlabsVoiceId(localStorage.getItem('elevenlabs_voice_id') || 'EXAVITQu4vr4xnSDxMaL');
         submitLoadAiKey();
     }, [ isAiPanelVisible, submitLoadAiKey ]);
 
@@ -699,12 +720,21 @@ export const ChatInputView: FC<{}> = props =>
                         
                         { aiActiveTab === 'settings' && (
                             <Column gap={ 2 }>
-                                <Text bold>Set AI Key</Text>
-                                <label className="small">Provider (anthropic only)</label>
+                                <Text bold>AI API Key</Text>
+                                <label className="small">Provider</label>
                                 <input className="form-control form-control-sm" value="anthropic" readOnly />
                                 <label className="small">API key</label>
                                 <input className="form-control form-control-sm" value={ aiApiKey } onChange={ event => setAiApiKey(event.target.value) } />
-                                <Button variant="success" onClick={ submitSetAiKey }>Set API Key</Button>
+                                <Button variant="success" onClick={ submitSetAiKey }>Save AI Key</Button>
+
+                                <hr className="my-2" />
+                                <Text bold>ElevenLabs TTS Key</Text>
+                                <label className="small">API key (for bot voice in hotel)</label>
+                                <input className="form-control form-control-sm" value={ aiElevenlabsKey } onChange={ event => setAiElevenlabsKey(event.target.value) } />
+                                <label className="small">Voice ID (default: Rachel)</label>
+                                <input className="form-control form-control-sm" value={ aiElevenlabsVoiceId } onChange={ event => setAiElevenlabsVoiceId(event.target.value) } />
+                                <Button variant="success" onClick={ submitSetElevenlabsKey }>Save ElevenLabs Key</Button>
+                                <Button variant="secondary" className="mt-1" onClick={ submitSetElevenlabsVoiceId }>Save Voice ID</Button>
                             </Column>
                         ) }
                     </NitroCardContentView>
