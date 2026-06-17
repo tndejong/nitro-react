@@ -1,25 +1,17 @@
 export class AiSettingsStore
 {
-    private static _elevenlabsKey: string = '';
-    private static _elevenlabsVoiceId: string = '';
+    // Short-lived portal bearer token, minted by the emulator (via SSO) and
+    // relayed through the AI settings packet. Used as Authorization: Bearer for
+    // portal calls (e.g. TTS). No raw API keys are ever held client-side.
+    private static _hotelToken: string = '';
 
-    public static get elevenlabsKey(): string
+    public static get hotelToken(): string
     {
-        return this._elevenlabsKey;
+        return this._hotelToken;
     }
 
-    public static set elevenlabsKey(value: string)
+    public static set hotelToken(value: string)
     {
-        this._elevenlabsKey = value;
-    }
-
-    public static get elevenlabsVoiceId(): string
-    {
-        return this._elevenlabsVoiceId || 'EXAVITQu4vr4xnSDxMaL';
-    }
-
-    public static set elevenlabsVoiceId(value: string)
-    {
-        this._elevenlabsVoiceId = value;
+        this._hotelToken = value || '';
     }
 }

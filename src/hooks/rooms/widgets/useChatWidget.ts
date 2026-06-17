@@ -1,6 +1,6 @@
 import { AvatarFigurePartType, AvatarScaleType, AvatarSetType, GetGuestRoomResultEvent, NitroPoint, PetFigureData, RoomChatSettings, RoomChatSettingsEvent, RoomDragEvent, RoomObjectCategory, RoomObjectType, RoomObjectVariable, RoomSessionChatEvent, RoomUserData, SystemChatStyleEnum, TextureUtils, Vector3d } from '@nitrots/nitro-renderer';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { AiSettingsStore, ChatBubbleMessage, ChatEntryType, ChatHistoryCurrentDate, GetAvatarRenderManager, GetConfiguration, GetRoomEngine, GetRoomObjectScreenLocation, GetSessionDataManager, IRoomChatSettings, LocalizeText, PlaySound, RoomChatFormatter } from '../../../api';
+import { ChatBubbleMessage, ChatEntryType, ChatHistoryCurrentDate, GetAvatarRenderManager, GetConfiguration, GetRoomEngine, GetRoomObjectScreenLocation, HotelPortalClient, IRoomChatSettings, LocalizeText, PlaySound, RoomChatFormatter } from '../../../api';
 import { useMessageEvent, useRoomEngineEvent, useRoomSessionManagerEvent } from '../../events';
 import { useRoom } from '../useRoom';
 import { useChatHistory } from './../../chat-history';
@@ -130,23 +130,14 @@ const useChatWidgetState = () =>
                 {
                     imageUrl = getUserImage(figure);
                     styleId = 0;
-                    const elKey = AiSettingsStore.elevenlabsKey;
-                    let voiceId = AiSettingsStore.elevenlabsVoiceId;
                     const motto = userData.custom || '';
                     const voiceMatch = motto.match(/v:(\S+)/);
-                    if (voiceMatch) voiceId = voiceMatch[1];
-                    if (elKey) {
-                        const portalUrl = window.location.origin.includes(':8080') ? window.location.origin.replace(':8080', ':3090') : 'http://localhost:3090';
+                    const voiceId = voiceMatch ? voiceMatch[1] : undefined;
+                    console.log(`[TTS] bot message received; hasHotelToken=${HotelPortalClient.hasToken} textLen=${text.length}`);
+                    if (HotelPortalClient.hasToken) {
                         const msgArrival = Date.now();
                         console.log(`[TIMING] client botMsg textLen=${text.length} arrival=${msgArrival}`);
-                        fetch(`${portalUrl}/api/chat/tts/hotel`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ text, api_key: elKey, voice_id: voiceId })
-                            }).then(r => {
-                                if (!r.ok) { console.log(`[TIMING] client TTS_FAIL status=${r.status} ms=${Date.now()-msgArrival}`); return; }
-                                return r.blob();
-                            }).then(blob => {
+                        HotelPortalClient.tts(text, voiceId).then(blob => {
                                 if (!blob) { console.log(`[TIMING] client TTS noBlob ms=${Date.now()-msgArrival}`); return; }
                                 const url = URL.createObjectURL(blob);
                                 const audio = new Audio(url);
@@ -158,16 +149,13 @@ const useChatWidgetState = () =>
                                     console.log(`[TIMING] client audio.end duration=${audio.duration}s ms=${endMs-msgArrival}`);
                                     URL.revokeObjectURL(url);
                                     try {
-                                        fetch(`${portalUrl}/api/chat/ai_next/hotel`, {
-                                            method: 'POST',
-                                            headers: { 'Content-Type': 'application/json' },
-                                            body: JSON.stringify({ user_id: GetSessionDataManager().userId })
-                                        }).then(() => console.log(`[TIMING] client ai_next sent ms=${Date.now()-endMs}`));
+                                        HotelPortalClient.aiNext().then(() => console.log(`[TIMING] client ai_next sent ms=${Date.now()-endMs}`));
                                     } catch(e) {}
                                 };
                                 audio.play().catch(() => console.log(`[TIMING] client audio.playCatch ms=${Date.now()-msgArrival}`));
                             }).catch(() => {});
                     } else if ('speechSynthesis' in window) {
+                        console.log('[TTS] no hotel token — falling back to browser speechSynthesis');
                         const utterance = new SpeechSynthesisUtterance(text);
                         utterance.rate = 1.1;
                         speechSynthesis.speak(utterance);

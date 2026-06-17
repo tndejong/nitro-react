@@ -11,9 +11,6 @@ export const ChatInputView: FC<{}> = props =>
     const [ chatValue, setChatValue ] = useState<string>('');
     const [ isAiPanelVisible, setIsAiPanelVisible ] = useState<boolean>(false);
     const [ aiActiveTab, setAiActiveTab ] = useState<string>('agents');
-    const [ aiApiKey, setAiApiKey ] = useState<string>('');
-    const [ aiElevenlabsKey, setAiElevenlabsKey ] = useState<string>('');
-    const [ aiElevenlabsVoiceId, setAiElevenlabsVoiceId ] = useState<string>('EXAVITQu4vr4xnSDxMaL');
     const [ aiBotName, setAiBotName ] = useState<string>('Aria');
     const [ aiFigureType, setAiFigureType ] = useState<string>('agent');
     const [ aiSpawnX, setAiSpawnX ] = useState<string>('');
@@ -149,33 +146,6 @@ export const ChatInputView: FC<{}> = props =>
         setChatValue('');
         sendChat(command, ChatMessageTypeEnum.CHAT_DEFAULT, '', chatStyleId);
     }, [ chatStyleId, setIsIdle, setIsTyping, sendChat ]);
-
-    const submitSetAiKey = useCallback(() =>
-    {
-        const key = aiApiKey.trim();
-
-        if(!key.length) return;
-
-        sendRawCommand(`:set_ai_key ${ key } anthropic`);
-    }, [ aiApiKey, sendRawCommand ]);
-
-    const submitSetElevenlabsKey = useCallback(() =>
-    {
-        const key = aiElevenlabsKey.trim();
-
-        if(!key.length) return;
-
-        AiSettingsStore.elevenlabsKey = key;
-        sendRawCommand(`:set_ai_key ${ key } elevenlabs`);
-    }, [ aiElevenlabsKey, sendRawCommand ]);
-
-    const submitSetElevenlabsVoiceId = useCallback(() =>
-    {
-        const voiceId = aiElevenlabsVoiceId.trim();
-        if(!voiceId.length) return;
-        AiSettingsStore.elevenlabsVoiceId = voiceId;
-        sendRawCommand(`:set_ai_voice_id ${ voiceId }`);
-    }, [ aiElevenlabsVoiceId ]);
 
     const submitSetupAgent = useCallback(() =>
     {
@@ -369,15 +339,16 @@ export const ChatInputView: FC<{}> = props =>
         {
             const parser = messageEvent.getParser();
 
-            setAiApiKey(parser.apiKey || '');
-            setAiElevenlabsKey(parser.elevenlabsKey || '');
-            setAiElevenlabsVoiceId(parser.elevenlabsVoiceId || 'EXAVITQu4vr4xnSDxMaL');
-
-            AiSettingsStore.elevenlabsKey = parser.elevenlabsKey || '';
-            AiSettingsStore.elevenlabsVoiceId = parser.elevenlabsVoiceId || '';
+            AiSettingsStore.hotelToken = parser.hotelToken || '';
+            console.log(`[TTS] received hotel token from emulator (len=${ (parser.hotelToken || '').length })`);
         });
 
         communication.registerMessageEvent(event);
+
+        // Request the hotel token at startup so bot TTS works without first
+        // opening the :ai panel. The emulator mints it via the portal and relays
+        // it through this same packet.
+        SendMessageComposer(new AiModalGetSettingsComposer());
 
         return () => communication.removeMessageEvent(event);
     }, []);
@@ -386,8 +357,6 @@ export const ChatInputView: FC<{}> = props =>
     {
         if(!isAiPanelVisible) return;
 
-        setAiElevenlabsKey(AiSettingsStore.elevenlabsKey);
-        setAiElevenlabsVoiceId(AiSettingsStore.elevenlabsVoiceId);
         submitLoadAiKey();
     }, [ isAiPanelVisible, submitLoadAiKey ]);
 
@@ -726,21 +695,12 @@ export const ChatInputView: FC<{}> = props =>
                         
                         { aiActiveTab === 'settings' && (
                             <Column gap={ 2 }>
-                                <Text bold>AI API Key</Text>
-                                <label className="small">Provider</label>
-                                <input className="form-control form-control-sm" value="anthropic" readOnly />
-                                <label className="small">API key</label>
-                                <input className="form-control form-control-sm" value={ aiApiKey } onChange={ event => setAiApiKey(event.target.value) } />
-                                <Button variant="success" onClick={ submitSetAiKey }>Save AI Key</Button>
-
-                                <hr className="my-2" />
-                                <Text bold>ElevenLabs TTS Key</Text>
-                                <label className="small">API key (for bot voice in hotel)</label>
-                                <input className="form-control form-control-sm" value={ aiElevenlabsKey } onChange={ event => setAiElevenlabsKey(event.target.value) } />
-                                <label className="small">Voice ID (default: Rachel)</label>
-                                <input className="form-control form-control-sm" value={ aiElevenlabsVoiceId } onChange={ event => setAiElevenlabsVoiceId(event.target.value) } />
-                                <Button variant="success" onClick={ submitSetElevenlabsKey }>Save ElevenLabs Key</Button>
-                                <Button variant="secondary" className="mt-1" onClick={ submitSetElevenlabsVoiceId }>Save Voice ID</Button>
+                                <Text bold>API Keys</Text>
+                                <Text small>
+                                    Your Anthropic and ElevenLabs keys are now managed in the web portal
+                                    under Settings → Voice &amp; Audio. They are stored securely there and
+                                    used automatically by your agents — no keys are entered in the hotel.
+                                </Text>
                             </Column>
                         ) }
                     </NitroCardContentView>
