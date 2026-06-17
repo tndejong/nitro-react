@@ -1,7 +1,7 @@
 import { HabboClubLevelEnum, ILinkEventTracker, RoomControllerLevel } from '@nitrots/nitro-renderer';
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { AddEventLinkTracker, AiModalGetSettingsComposer, AiModalSettingsEvent, ChatMessageTypeEnum, GetClubMemberLevel, GetCommunication, GetConfiguration, GetSessionDataManager, LocalizeText, registerAiModalPacketMessages, RemoveLinkEventTracker, RoomWidgetUpdateChatInputContentEvent, SendMessageComposer } from '../../../../api';
+import { AddEventLinkTracker, AiModalGetSettingsComposer, AiModalSettingsEvent, AiSettingsStore, ChatMessageTypeEnum, GetClubMemberLevel, GetCommunication, GetConfiguration, GetSessionDataManager, LocalizeText, registerAiModalPacketMessages, RemoveLinkEventTracker, RoomWidgetUpdateChatInputContentEvent, SendMessageComposer } from '../../../../api';
 import { Button, Column, Flex, NitroCardContentView, NitroCardHeaderView, NitroCardTabsItemView, NitroCardTabsView, NitroCardView, Text } from '../../../../common';
 import { useChatInputWidget, useRoom, useSessionInfo, useUiEvent } from '../../../../hooks';
 import { ChatInputStyleSelectorView } from './ChatInputStyleSelectorView';
@@ -165,7 +165,7 @@ export const ChatInputView: FC<{}> = props =>
 
         if(!key.length) return;
 
-        localStorage.setItem('elevenlabs_api_key', key);
+        AiSettingsStore.elevenlabsKey = key;
         sendRawCommand(`:set_ai_key ${ key } elevenlabs`);
     }, [ aiElevenlabsKey, sendRawCommand ]);
 
@@ -173,7 +173,8 @@ export const ChatInputView: FC<{}> = props =>
     {
         const voiceId = aiElevenlabsVoiceId.trim();
         if(!voiceId.length) return;
-        localStorage.setItem('elevenlabs_voice_id', voiceId);
+        AiSettingsStore.elevenlabsVoiceId = voiceId;
+        sendRawCommand(`:set_ai_voice_id ${ voiceId }`);
     }, [ aiElevenlabsVoiceId ]);
 
     const submitSetupAgent = useCallback(() =>
@@ -369,6 +370,11 @@ export const ChatInputView: FC<{}> = props =>
             const parser = messageEvent.getParser();
 
             setAiApiKey(parser.apiKey || '');
+            setAiElevenlabsKey(parser.elevenlabsKey || '');
+            setAiElevenlabsVoiceId(parser.elevenlabsVoiceId || 'EXAVITQu4vr4xnSDxMaL');
+
+            AiSettingsStore.elevenlabsKey = parser.elevenlabsKey || '';
+            AiSettingsStore.elevenlabsVoiceId = parser.elevenlabsVoiceId || '';
         });
 
         communication.registerMessageEvent(event);
@@ -380,8 +386,8 @@ export const ChatInputView: FC<{}> = props =>
     {
         if(!isAiPanelVisible) return;
 
-        setAiElevenlabsKey(localStorage.getItem('elevenlabs_api_key') || '');
-        setAiElevenlabsVoiceId(localStorage.getItem('elevenlabs_voice_id') || 'EXAVITQu4vr4xnSDxMaL');
+        setAiElevenlabsKey(AiSettingsStore.elevenlabsKey);
+        setAiElevenlabsVoiceId(AiSettingsStore.elevenlabsVoiceId);
         submitLoadAiKey();
     }, [ isAiPanelVisible, submitLoadAiKey ]);
 
