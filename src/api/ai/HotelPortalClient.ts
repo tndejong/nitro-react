@@ -1,14 +1,17 @@
 import { AiSettingsStore } from './AiSettingsStore';
+import { GetConfiguration } from '../nitro';
 
 // Single client for all portal calls made from the in-hotel Nitro client.
-// Resolves the portal base URL from the current origin and injects the
-// Authorization: Bearer token from AiSettingsStore so no call hand-rolls auth.
+// The portal base URL is read from renderer-config.json (portal.public.url)
+// which is set at container start via HABBO_PORTAL_PUBLIC_URL, so the correct
+// value is used in both local dev (http://127.0.0.1:3090) and production
+// (https://portal.thepixeloffice.ai). No CORS issues since both hotel and
+// portal run under the same (or your own) Coolify reverse proxy.
 export class HotelPortalClient
 {
     private static portalUrl(): string
     {
-        const origin = window.location.origin;
-        return origin.includes(':8080') ? origin.replace(':8080', ':3090') : 'http://localhost:3090';
+        return GetConfiguration('portal.public.url', 'http://localhost:3090');
     }
 
     private static authHeaders(): Record<string, string>
